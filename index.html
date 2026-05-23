@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Katelyn — NOLA Sunset</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#0b0414; overflow:hidden; font-family: ui-monospace, Menlo, monospace; color:#fff; }
+  #c { display:block; width:100vw; height:100vh; }
+  .label {
+    position: fixed; left: 18px; bottom: 16px;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #ffd9f1; opacity: 0.85; mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  .label b { color:#fff; font-weight:600; letter-spacing:0.22em;}
+  .hint {
+    position: fixed; right: 18px; bottom: 16px;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: #ffd9f1; opacity: 0.55; pointer-events:none;
+  }
+  /* Tweaks panel */
+  #tweaks-panel {
+    position: fixed; top: 20px; right: 20px;
+    width: 260px;
+    background: rgba(18, 8, 36, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 158, 209, 0.3);
+    border-radius: 14px;
+    padding: 14px 16px 16px;
+    color: #fff;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    z-index: 50;
+    display: none;
+    user-select: none;
+  }
+  #tweaks-panel.show { display: block; }
+  #tweaks-panel .tw-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  #tweaks-panel .tw-title {
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: #ffd9f1; font-weight: 600;
+  }
+  #tweaks-panel .tw-close {
+    background: transparent; border: none; color: rgba(255,255,255,0.5);
+    cursor: pointer; font: inherit; font-size: 16px; padding: 0 4px; line-height: 1;
+  }
+  #tweaks-panel .tw-close:hover { color: #ff9ed1; }
+  #tweaks-panel .tw-section {
+    margin-bottom: 10px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  #tweaks-panel .tw-section:first-of-type { border-top: none; padding-top: 0; }
+  #tweaks-panel .tw-section-title {
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255, 158, 209, 0.75); margin-bottom: 8px;
+  }
+  #tweaks-panel .tw-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px; gap: 10px;
+  }
+  #tweaks-panel .tw-label {
+    color: rgba(255,255,255,0.85); font-size: 12px;
+  }
+  #tweaks-panel .switch {
+    position: relative; display: inline-block; width: 38px; height: 22px;
+    flex-shrink: 0;
+  }
+  #tweaks-panel .switch input { opacity:0; width:0; height:0; }
+  #tweaks-panel .switch .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    transition: background 0.2s;
+  }
+  #tweaks-panel .switch .slider:before {
+    position: absolute; content: "";
+    height: 16px; width: 16px; left: 3px; bottom: 3px;
+    background: #fff; border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  #tweaks-panel input:checked + .slider { background: #ff5a86; }
+  #tweaks-panel input:checked + .slider:before { transform: translateX(16px); }
+  #tweaks-panel input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 110px; height: 4px; background: rgba(255,255,255,0.15);
+    border-radius: 999px; outline: none; margin: 0;
+  }
+  #tweaks-panel input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%; background: #ff9ed1;
+    cursor: pointer; border: 2px solid #fff;
+  }
+  #tweaks-panel input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: #ff9ed1;
+    cursor: pointer; border: 2px solid #fff;
+  }
+  #tweaks-panel .tw-value {
+    color: #ff9ed1; font-size: 11px; min-width: 28px; text-align: right;
+  }
+  /* Floating open button */
+  #tw-open-btn {
+    position: fixed; bottom: 18px; right: 18px;
+    z-index: 49;
+    background: rgba(18, 8, 36, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 158, 209, 0.45);
+    border-radius: 999px;
+    padding: 10px 16px;
+    color: #ffd9f1;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    transition: all 0.2s;
+  }
+  #tw-open-btn:hover {
+    background: rgba(255, 90, 134, 0.4);
+    border-color: #ff9ed1;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(255, 90, 134, 0.35);
+  }
+  #tw-open-btn .tw-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ff5a86;
+    box-shadow: 0 0 8px #ff5a86;
+    animation: tw-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes tw-pulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.4); }
+  }
+  body.tweaks-open #tw-open-btn { display: none; }
+  #tweaks-panel .tw-outfit {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.75);
+    font: inherit; font-size: 10px;
+    letter-spacing: 0.04em;
+    padding: 6px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  #tweaks-panel .tw-outfit:hover {
+    background: rgba(255,158,209,0.15);
+    color: #fff;
+  }
+  #tweaks-panel .tw-outfit.active {
+    background: #ff5a86;
+    border-color: #ff9ed1;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="label"><b>Katelyn</b> &nbsp;·&nbsp; new orleans, sunset</div>
+<div class="hint">drag · scroll · toggle Tweaks</div>
+
+<button id="tw-open-btn" aria-label="open tweaks"><span class="tw-dot"></span>Tweaks</button>
+
+<div id="tweaks-panel">
+  <div class="tw-header">
+    <div class="tw-title">Tweaks</div>
+    <button class="tw-close" id="tw-close-btn" aria-label="close">×</button>
+  </div>
+  <div class="tw-section">
+    <div class="tw-section-title">Cast</div>
+    <div class="tw-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+      <span class="tw-label" style="font-size:11px;color:rgba(255,255,255,0.75);">Katelyn's outfit</span>
+      <div id="tw-outfit-row" style="display:flex;gap:4px;">
+        <button class="tw-outfit" data-key="leopard">Leopard</button>
+        <button class="tw-outfit" data-key="bluedress">Blue Dress</button>
+        <button class="tw-outfit" data-key="mattsgirl">Matt's Girl</button>
+      </div>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Matt</span>
+      <label class="switch"><input type="checkbox" id="tw-matt"><span class="slider"></span></label>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Dogs running</span>
+      <label class="switch"><input type="checkbox" id="tw-dogs" checked><span class="slider"></span></label>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Flying pigs</span>
+      <label class="switch"><input type="checkbox" id="tw-pigs" checked><span class="slider"></span></label>
+    </div>
+  </div>
+  <div class="tw-section">
+    <div class="tw-section-title">Environment</div>
+    <div class="tw-row">
+      <span class="tw-label">Flower clouds</span>
+      <label class="switch"><input type="checkbox" id="tw-flowers" checked><span class="slider"></span></label>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Sparkles</span>
+      <label class="switch"><input type="checkbox" id="tw-sparkles" checked><span class="slider"></span></label>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Moon</span>
+      <label class="switch"><input type="checkbox" id="tw-moon" checked><span class="slider"></span></label>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Fireflies</span>
+      <label class="switch"><input type="checkbox" id="tw-fireflies" checked><span class="slider"></span></label>
+    </div>
+  </div>
+  <div class="tw-section">
+    <div class="tw-section-title">Camera</div>
+    <div class="tw-row">
+      <span class="tw-label">Auto-orbit</span>
+      <label class="switch"><input type="checkbox" id="tw-orbit"><span class="slider"></span></label>
+    </div>
+    <div class="tw-row">
+      <span class="tw-label">Orbit speed</span>
+      <input type="range" id="tw-orbit-speed" min="5" max="100" value="30" step="1">
+      <span class="tw-value" id="tw-orbit-speed-v">30</span>
+    </div>
+  </div>
+  <div class="tw-section">
+    <div class="tw-section-title">Vibe</div>
+    <div class="tw-row">
+      <span class="tw-label">Island bobbing</span>
+      <label class="switch"><input type="checkbox" id="tw-bob" checked><span class="slider"></span></label>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// renderer / scene / camera
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(5.6, 3.6, 9.2);
+
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 1.6, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 5;
+controls.maxDistance = 18;
+controls.minPolarAngle = 0.4;
+controls.maxPolarAngle = Math.PI / 2 + 0.05;
+controls.enablePan = false;
+
+// SKY
+function makeSkyTexture() {
+  const w = 1024, h = 1024;
+  const canv = document.createElement('canvas');
+  canv.width = w; canv.height = h;
+  const ctx = canv.getContext('2d');
+
+  const grd = ctx.createLinearGradient(0, 0, 0, h);
+  grd.addColorStop(0.00, '#1a1145');
+  grd.addColorStop(0.18, '#3b1d6b');
+  grd.addColorStop(0.38, '#a23a8a');
+  grd.addColorStop(0.55, '#ef5d6a');
+  grd.addColorStop(0.72, '#ff9c52');
+  grd.addColorStop(0.86, '#ffd58a');
+  grd.addColorStop(1.00, '#ffe7b0');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = '#ffffff';
+  for (let i = 0; i < 90; i++) {
+    const y = Math.random() * h * 0.28;
+    const x = Math.random() * w;
+    const r = Math.random() * 1.4 + 0.3;
+    ctx.globalAlpha = 0.4 + Math.random() * 0.55;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  function puff(cx, cy, rx, ry, color, alpha) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(cx, cy);
+    ctx.scale(rx / 100, ry / 100);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, 0, 100, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  puff(180, 640, 320, 70, '#ffc6e0', 0.85);
+  puff(540, 600, 380, 80, '#ffd9b8', 0.9);
+  puff(820, 660, 260, 60, '#ffb3c1', 0.8);
+  puff(330, 720, 260, 50, '#ffe0c2', 0.95);
+  puff(720, 740, 300, 55, '#ffd2a8', 0.95);
+  puff(140, 380, 240, 38, '#d6b6ff', 0.55);
+  puff(620, 420, 300, 40, '#e5b8ff', 0.5);
+  puff(880, 460, 200, 35, '#c9a8ff', 0.45);
+  for (let i = 0; i < 14; i++) {
+    puff(Math.random()*w, 500 + Math.random()*250,
+         40 + Math.random()*60, 14 + Math.random()*16,
+         '#fff1d9', 0.4 + Math.random()*0.3);
+  }
+
+  // HOT PINK SUN — large, with magenta halo and coral outer glow
+  const sunY = h * 0.78, sunX = w * 0.62;
+  const sunOuter = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 460);
+  sunOuter.addColorStop(0,    'rgba(255, 90, 170, 0.9)');
+  sunOuter.addColorStop(0.35, 'rgba(255, 70, 150, 0.55)');
+  sunOuter.addColorStop(0.7,  'rgba(255, 130, 130, 0.25)');
+  sunOuter.addColorStop(1,    'rgba(255, 130, 130, 0)');
+  ctx.fillStyle = sunOuter;
+  ctx.beginPath(); ctx.arc(sunX, sunY, 460, 0, Math.PI*2); ctx.fill();
+  // hot pink core
+  const core = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 200);
+  core.addColorStop(0,   '#fff0f5');
+  core.addColorStop(0.18,'#ff9ed1');
+  core.addColorStop(0.55,'#ff3aa0');
+  core.addColorStop(1,   '#ff1f86');
+  ctx.fillStyle = core;
+  ctx.beginPath(); ctx.arc(sunX, sunY, 200, 0, Math.PI*2); ctx.fill();
+  // sun ring
+  ctx.strokeStyle = 'rgba(255,180,220,0.5)';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(sunX, sunY, 230, 0, Math.PI*2); ctx.stroke();
+
+  const tex = new THREE.CanvasTexture(canv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  return tex;
+}
+
+{
+  const skyGeo = new THREE.SphereGeometry(80, 48, 32);
+  const skyMat = new THREE.MeshBasicMaterial({
+    map: makeSkyTexture(),
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+  const sky = new THREE.Mesh(skyGeo, skyMat);
+  sky.rotation.y = Math.PI * 0.15;
+  scene.add(sky);
+}
+
+scene.fog = new THREE.Fog('#f3a07a', 28, 80);
+
+// LIGHTS
+scene.add(new THREE.HemisphereLight('#ffd9b3', '#3a2255', 0.85));
+
+const sun = new THREE.DirectionalLight('#ffb98a', 1.6);
+sun.position.set(7, 5, 4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 30;
+sun.shadow.camera.left = -8;
+sun.shadow.camera.right = 8;
+sun.shadow.camera.top = 8;
+sun.shadow.camera.bottom = -8;
+sun.shadow.bias = -0.0005;
+scene.add(sun);
+
+const rim = new THREE.DirectionalLight('#ff7ab8', 0.55);
+rim.position.set(-5, 3, -4);
+scene.add(rim);
+
+const fill = new THREE.PointLight('#a07cff', 0.4, 18);
+fill.position.set(-3, 2.4, 3);
+scene.add(fill);
+
+// grass texture
+function makeGrassTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#5fa84a'; ctx.fillRect(0,0,256,256);
+  for (let i=0;i<2200;i++){
+    const x = Math.random()*256, y = Math.random()*256;
+    const shades = ['#7cc862','#3f8a36','#a8d76f','#4d9a3e','#6bb84f'];
+    ctx.strokeStyle = shades[i % shades.length];
+    ctx.lineWidth = 0.8 + Math.random()*0.7;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x + (Math.random()-0.5)*1.5, y - 2 - Math.random()*2);
+    ctx.stroke();
+  }
+  for (let i=0;i<24;i++){
+    const x = Math.random()*256, y = Math.random()*256;
+    ctx.fillStyle = ['#ffd1e8','#fff4a0','#ffffff','#ffb6e1'][i%4];
+    ctx.beginPath(); ctx.arc(x,y,1.4,0,Math.PI*2); ctx.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(3,3);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// FLOATING ISLAND
+const islandGroup = new THREE.Group();
+scene.add(islandGroup);
+
+{
+  const rockGeo = new THREE.ConeGeometry(2.6, 2.8, 16, 4, false);
+  const pos = rockGeo.attributes.position;
+  for (let i=0;i<pos.count;i++){
+    const y = pos.getY(i);
+    if (y < 1.0) {
+      pos.setX(i, pos.getX(i) + (Math.random()-0.5)*0.25);
+      pos.setZ(i, pos.getZ(i) + (Math.random()-0.5)*0.25);
+      pos.setY(i, y + (Math.random()-0.5)*0.18);
+    }
+  }
+  rockGeo.computeVertexNormals();
+  const rockMat = new THREE.MeshStandardMaterial({ color:'#6b4a3a', roughness:0.95, flatShading:true });
+  const rock = new THREE.Mesh(rockGeo, rockMat);
+  rock.position.y = -0.4;
+  rock.rotation.y = Math.PI;
+  rock.castShadow = true; rock.receiveShadow = true;
+  islandGroup.add(rock);
+}
+
+for (let i=0;i<6;i++){
+  const ang = (i/6)*Math.PI*2;
+  const len = 0.4 + Math.random()*0.5;
+  const root = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.01, len, 6),
+    new THREE.MeshStandardMaterial({color:'#3a2418', roughness:1})
+  );
+  root.position.set(Math.cos(ang)*1.6, -1.5 - len/2, Math.sin(ang)*1.6);
+  root.rotation.z = (Math.random()-0.5)*0.3;
+  islandGroup.add(root);
+}
+
+{
+  const grassGeo = new THREE.CylinderGeometry(2.7, 2.55, 0.45, 32);
+  const grassMat = new THREE.MeshStandardMaterial({
+    map: makeGrassTexture(), roughness: 0.9, color:'#8fcf6c'
+  });
+  const grass = new THREE.Mesh(grassGeo, grassMat);
+  grass.position.y = 0.85;
+  grass.receiveShadow = true; grass.castShadow = true;
+  islandGroup.add(grass);
+
+  for (let i=0;i<60;i++){
+    const r = Math.random() * 2.4;
+    const a = Math.random()*Math.PI*2;
+    const blade = new THREE.Mesh(
+      new THREE.ConeGeometry(0.04, 0.18 + Math.random()*0.12, 4),
+      new THREE.MeshStandardMaterial({color: ['#7cc862','#5fa84a','#a8d76f'][i%3], roughness:1})
+    );
+    blade.position.set(Math.cos(a)*r, 1.15, Math.sin(a)*r);
+    blade.rotation.z = (Math.random()-0.5)*0.4;
+    islandGroup.add(blade);
+  }
+
+  for (let i=0;i<7;i++){
+    const r = 0.5 + Math.random()*1.7;
+    const a = Math.random()*Math.PI*2;
+    const stem = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02,0.02,0.18,5),
+      new THREE.MeshStandardMaterial({color:'#3f8a36'})
+    );
+    stem.position.set(Math.cos(a)*r, 1.18, Math.sin(a)*r);
+    islandGroup.add(stem);
+    const flower = new THREE.Mesh(
+      new THREE.SphereGeometry(0.07, 8, 6),
+      new THREE.MeshStandardMaterial({color: ['#ffd1e8','#fff4a0','#ffb6e1','#ffffff'][i%4], roughness:0.7})
+    );
+    flower.position.set(stem.position.x, 1.32, stem.position.z);
+    islandGroup.add(flower);
+  }
+}
+
+// NEW ORLEANS SKYLINE
+function makeSkyline() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color: '#2a1840', fog: true });
+  const matFar = new THREE.MeshBasicMaterial({ color: '#52315e', fog: true });
+
+  const ringR = 26;
+  const buildings = [
+    // far-left wing
+    { type:'shotgun', x:-18, w:1.6, h:1.1 },
+    { type:'shotgun', x:-16, w:1.5, h:1.0 },
+    { type:'shotgun', x:-14, w:1.4, h:1.2 },
+    { type:'office',  x:-12.4, w:1.0, h:2.4 },
+    { type:'office',  x:-11.2, w:0.9, h:2.0 },
+    { type:'shotgun', x:-9.6, w:1.6, h:1.2 },
+    { type:'shotgun', x:-8,   w:1.4, h:1.0 },
+    // SUPERDOME
+    { type:'superdome', x:-5.4, w:3.2, h:2.0 },
+    // shotgun row leading to cathedral
+    { type:'shotgun', x:-2.4, w:1.4, h:1.2 },
+    // St Louis Cathedral
+    { type:'cathedral', x:-0.6, w:2.4, h:2.4 },
+    // CBD tower cluster
+    { type:'office', x:2.4, w:1.0, h:3.4 },
+    { type:'office', x:3.6, w:1.2, h:4.0 }, // tall (One Shell Square stand-in)
+    { type:'office', x:5.0, w:0.9, h:2.6 },
+    { type:'office', x:6.0, w:0.85, h:3.0 },
+    // riverboat
+    { type:'boat', x:8.0, w:2.6, h:1.6 },
+    // far-right wing
+    { type:'shotgun', x:10.6, w:1.5, h:1.1 },
+    { type:'shotgun', x:12.4, w:1.4, h:1.0 },
+    { type:'shotgun', x:14.2, w:1.6, h:1.2 },
+    { type:'office',  x:16,   w:0.9, h:2.2 },
+    { type:'shotgun', x:17.8, w:1.5, h:1.1 },
+  ];
+
+  buildings.forEach(b => {
+    const angle = Math.atan2(b.x, ringR);
+    const px = Math.sin(angle) * ringR;
+    const pz = -Math.cos(angle) * ringR;
+
+    if (b.type === 'shotgun') {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, 0.6), mat);
+      body.position.set(px, b.h/2 - 0.5, pz);
+      g.add(body);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(b.w*0.78, 0.5, 4), mat);
+      roof.rotation.y = Math.PI/4;
+      roof.position.set(px, b.h - 0.5 + 0.25, pz);
+      g.add(roof);
+      const chim = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.4,0.12), mat);
+      chim.position.set(px - b.w*0.3, b.h - 0.3, pz);
+      g.add(chim);
+    } else if (b.type === 'cathedral') {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h*0.7, 0.8), mat);
+      body.position.set(px, b.h*0.35 - 0.5, pz);
+      g.add(body);
+      const gable = new THREE.Mesh(new THREE.ConeGeometry(b.w*0.6, 0.5, 3), mat);
+      gable.rotation.y = Math.PI/6;
+      gable.position.set(px, b.h*0.7 - 0.5 + 0.25, pz);
+      g.add(gable);
+      for (let s=-1;s<=1;s++) {
+        const spire = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.4 + (s===0?0.4:0), 8), mat);
+        spire.position.set(px + s*b.w*0.4, b.h*0.7 - 0.5 + 0.7 + (s===0?0.2:0), pz);
+        g.add(spire);
+      }
+    } else if (b.type === 'office') {
+      const body = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, 0.7), matFar);
+      body.position.set(px, b.h/2 - 0.5, pz);
+      g.add(body);
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(b.w*0.5, 0.25, 0.4), matFar);
+      cap.position.set(px, b.h - 0.5 + 0.12, pz);
+      g.add(cap);
+    } else if (b.type === 'boat') {
+      const hull = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h*0.6, 0.8), mat);
+      hull.position.set(px, b.h*0.3 - 0.5, pz);
+      g.add(hull);
+      const tier = new THREE.Mesh(new THREE.BoxGeometry(b.w*0.7, b.h*0.4, 0.7), mat);
+      tier.position.set(px, b.h*0.6 - 0.5 + b.h*0.2, pz);
+      g.add(tier);
+      const s1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,1.0,8), mat);
+      s1.position.set(px-0.4, b.h*0.6 + 0.5, pz);
+      g.add(s1);
+      const s2 = s1.clone(); s2.position.x = px+0.4; g.add(s2);
+      [s1, s2].forEach(s => {
+        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.12,0.18,8), mat);
+        crown.position.set(s.position.x, s.position.y+0.55, s.position.z);
+        g.add(crown);
+      });
+    } else if (b.type === 'superdome') {
+      // big squat dome
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(b.w*0.55, b.w*0.6, 0.5, 24), mat);
+      base.position.set(px, -0.25, pz);
+      g.add(base);
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(b.w*0.65, 24, 14, 0, Math.PI*2, 0, Math.PI/2), mat);
+      dome.scale.set(1, 0.85, 1);
+      dome.position.set(px, 0, pz);
+      g.add(dome);
+      // dome cap dot
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), mat);
+      cap.position.set(px, b.w*0.55, pz);
+      g.add(cap);
+    }
+  });
+
+  const lightMat = new THREE.MeshBasicMaterial({color:'#ffe9a8'});
+  for (let i=0;i<140;i++){
+    const x = -20 + Math.random()*40;
+    const y = 0.2 + Math.random()*2.6;
+    const angle = Math.atan2(x, ringR);
+    const px = Math.sin(angle) * (ringR-0.5);
+    const pz = -Math.cos(angle) * (ringR-0.5);
+    const dot = new THREE.Mesh(new THREE.PlaneGeometry(0.05,0.08), lightMat);
+    dot.position.set(px, y - 0.5, pz);
+    dot.lookAt(0,1,0);
+    g.add(dot);
+  }
+
+  const water = new THREE.Mesh(
+    new THREE.PlaneGeometry(120, 50),
+    new THREE.MeshBasicMaterial({ color: '#7d3a6e', fog: true, transparent:true, opacity:0.85 })
+  );
+  water.rotation.x = -Math.PI/2;
+  water.position.set(0, -2.4, -10);
+  g.add(water);
+
+  // CRESCENT CITY CONNECTION — cable-stayed bridge with twin towers (LEFT-OFFSET, angled)
+  const bridgeGroup = new THREE.Group();
+  const bridgeMat = new THREE.MeshBasicMaterial({color:'#1a0d2e', fog:true});
+  const bridgeCableMat = new THREE.MeshBasicMaterial({color:'#3b1f5e', fog:true, transparent:true, opacity:0.85});
+  // long deck
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(28, 0.16, 0.5), bridgeMat);
+  deck.position.set(0, -0.6, 0);
+  bridgeGroup.add(deck);
+  // deck supports (verticals)
+  for (let i = -6; i <= 6; i++){
+    if (Math.abs(i) === 3) continue; // skip tower positions
+    const sup = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.1), bridgeMat);
+    sup.position.set(i * 2.0, -1.1, 0);
+    bridgeGroup.add(sup);
+  }
+  function towerA(xPos) {
+    const t = new THREE.Group();
+    const main = new THREE.Mesh(new THREE.BoxGeometry(0.22, 3.0, 0.22), bridgeMat);
+    main.position.set(0, 0.9, 0); t.add(main);
+    const diag1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 0.1), bridgeMat);
+    diag1.position.set(-0.5, 0.7, 0); diag1.rotation.z = 0.3; t.add(diag1);
+    const diag2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 0.1), bridgeMat);
+    diag2.position.set(0.5, 0.7, 0); diag2.rotation.z = -0.3; t.add(diag2);
+    const cross = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.12, 0.12), bridgeMat);
+    cross.position.set(0, 1.6, 0); t.add(cross);
+    t.position.set(xPos, -0.55, 0);
+    return t;
+  }
+  bridgeGroup.add(towerA(-6));
+  bridgeGroup.add(towerA( 6));
+  function cableLine(from, to) {
+    const dx = to.x - from.x, dy = to.y - from.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const cab = new THREE.Mesh(new THREE.BoxGeometry(0.025, len, 0.025), bridgeCableMat);
+    cab.position.set((from.x+to.x)/2, (from.y+to.y)/2, 0.06);
+    cab.rotation.z = Math.atan2(dy, dx) - Math.PI/2;
+    bridgeGroup.add(cab);
+  }
+  [-6, 6].forEach(tx => {
+    const top = { x: tx, y: 1.95 };
+    for (let dx = -5; dx <= 5; dx++) {
+      if (dx === 0) continue;
+      const target = { x: tx + dx * 0.7, y: -0.5 };
+      cableLine(top, target);
+    }
+  });
+  [-6, 6].forEach(tx => {
+    const v = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.5, 0.04), bridgeCableMat);
+    v.position.set(tx, 0.75, 0.06); bridgeGroup.add(v);
+  });
+  // place bridge on the LEFT side of the skyline, angled into the distance
+  bridgeGroup.position.set(-14, 0, -20);
+  bridgeGroup.rotation.y = 0.45; // angle so it recedes left-back
+  g.add(bridgeGroup);
+
+  return g;
+}
+scene.add(makeSkyline());
+
+// =============================================================
+// FLOWER CLOUDS — multiple flower TYPES floating in the sky
+// =============================================================
+const flowerClouds = new THREE.Group();
+scene.add(flowerClouds);
+
+// Hard rule: NO flower may sit between the camera's typical orbit ring and Katelyn at eye level.
+// We accomplish this by either placing flowers HIGH (above her head, y>=5.5) or FAR (radius>=8.5).
+const SAFE_INNER_RADIUS = 8.5;  // minimum radius for any flower at eye level
+const SAFE_HIGH_Y = 5.5;        // minimum height if inside the inner ring
+
+function petalMat(color) {
+  return new THREE.MeshStandardMaterial({
+    color, roughness: 0.55, emissive: color, emissiveIntensity: 0.22
+  });
+}
+function centerMat(color) {
+  return new THREE.MeshStandardMaterial({
+    color, roughness: 0.45, emissive: color, emissiveIntensity: 0.3
+  });
+}
+
+// --- daisy: simple flat ring of round petals around a yellow disc ---
+function makeDaisy(p, c) {
+  const g = new THREE.Group();
+  const pm = petalMat(p), cm = centerMat(c);
+  const n = 8;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 10), pm);
+    petal.scale.set(1.1, 0.55, 0.45);
+    petal.position.set(Math.cos(a) * 0.75, Math.sin(a) * 0.75, 0);
+    petal.rotation.z = a;
+    g.add(petal);
+  }
+  const cen = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 12), cm);
+  cen.scale.set(1, 1, 0.6);
+  g.add(cen);
+  return g;
+}
+
+// --- rose: layered overlapping spheres, fuller and rounder ---
+function makeRose(p, c) {
+  const g = new THREE.Group();
+  const pm = petalMat(p);
+  const pmDark = petalMat(new THREE.Color(p).multiplyScalar(0.75).getStyle());
+  // outer ring (5 large petals)
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.6, 14, 10), pm);
+    petal.scale.set(0.9, 0.9, 0.55);
+    petal.position.set(Math.cos(a) * 0.55, Math.sin(a) * 0.55, -0.05);
+    g.add(petal);
+  }
+  // middle ring (smaller, slightly forward)
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + Math.PI / 5;
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10), pmDark);
+    petal.scale.set(0.9, 0.9, 0.55);
+    petal.position.set(Math.cos(a) * 0.32, Math.sin(a) * 0.32, 0.1);
+    g.add(petal);
+  }
+  // bud center
+  const bud = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), pm);
+  bud.position.z = 0.18;
+  g.add(bud);
+  return g;
+}
+
+// --- tulip: 3 tall pointed petals + green leaves ---
+function makeTulip(p, c) {
+  const g = new THREE.Group();
+  const pm = petalMat(p);
+  const leaf = petalMat('#5cbf4a');
+  // 3 petals — elongated cones
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 - Math.PI/2;
+    const pet = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.1, 14), pm);
+    pet.position.set(Math.cos(a) * 0.18, Math.sin(a) * 0.18 + 0.2, 0);
+    pet.rotation.z = a - Math.PI/2;
+    g.add(pet);
+  }
+  // back-fill petal
+  const back = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 10), pm);
+  back.scale.set(1, 1.3, 0.55);
+  back.position.set(0, 0.25, -0.1);
+  g.add(back);
+  // 2 leaves
+  for (let s = -1; s <= 1; s += 2) {
+    const lf = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.9, 8), leaf);
+    lf.scale.set(0.6, 1, 0.4);
+    lf.position.set(s * 0.55, -0.5, 0);
+    lf.rotation.z = s * 0.7;
+    g.add(lf);
+  }
+  // small center dot
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), centerMat(c));
+  dot.position.set(0, 0.2, 0.4);
+  g.add(dot);
+  return g;
+}
+
+// --- star-flower: 5 pointed petals (cone-shaped) like a hibiscus ---
+function makeStarFlower(p, c) {
+  const g = new THREE.Group();
+  const pm = petalMat(p);
+  const n = 5;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 - Math.PI/2;
+    const pet = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.9, 10), pm);
+    pet.position.set(Math.cos(a) * 0.5, Math.sin(a) * 0.5, 0);
+    pet.rotation.z = a - Math.PI/2;
+    pet.scale.set(1, 1, 0.4);
+    g.add(pet);
+  }
+  // back disk
+  const disk = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.1, 16), pm);
+  disk.rotation.x = Math.PI/2;
+  g.add(disk);
+  // stamen tuft
+  const cen = new THREE.Mesh(new THREE.SphereGeometry(0.18, 14, 10), centerMat(c));
+  cen.position.z = 0.12;
+  g.add(cen);
+  for (let i = 0; i < 6; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const stamen = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 6, 5),
+      centerMat('#fff36a')
+    );
+    stamen.position.set(Math.cos(a)*0.1, Math.sin(a)*0.1, 0.25 + Math.random()*0.1);
+    g.add(stamen);
+  }
+  return g;
+}
+
+// --- pom-pom (dandelion / hydrangea): cluster of small spheres ---
+function makePomPom(p, c) {
+  const g = new THREE.Group();
+  const pm = petalMat(p);
+  const pmAlt = petalMat(new THREE.Color(p).lerp(new THREE.Color('#ffffff'), 0.35).getStyle());
+  const cluster = [];
+  // distribute spheres on a roughly spherical shell
+  for (let i = 0; i < 22; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 0.6 + Math.random() * 0.1;
+    const blob = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22 + Math.random()*0.07, 10, 8),
+      Math.random() < 0.5 ? pm : pmAlt
+    );
+    blob.position.set(
+      r * Math.sin(phi) * Math.cos(theta),
+      r * Math.sin(phi) * Math.sin(theta),
+      r * Math.cos(phi) * 0.55
+    );
+    g.add(blob);
+    cluster.push(blob);
+  }
+  return g;
+}
+
+// --- magnolia: 6-9 large creamy waxy petals, deep pink/yellow center ---
+function makeMagnolia(p, c) {
+  const g = new THREE.Group();
+  const pm = petalMat(p);
+  const pmShade = petalMat(new THREE.Color(p).multiplyScalar(0.85).getStyle());
+  const n = 7;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), pm);
+    petal.scale.set(1.1, 0.7, 0.35);
+    petal.position.set(Math.cos(a) * 0.6, Math.sin(a) * 0.6, 0);
+    petal.rotation.z = a;
+    petal.rotation.x = 0.18; // cup the petal slightly
+    g.add(petal);
+  }
+  // back layer for depth
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + Math.PI / n;
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.5, 14, 10), pmShade);
+    petal.scale.set(1.05, 0.65, 0.35);
+    petal.position.set(Math.cos(a) * 0.42, Math.sin(a) * 0.42, -0.12);
+    petal.rotation.z = a;
+    g.add(petal);
+  }
+  // big rich center (stamen cluster)
+  const cen = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), centerMat(c));
+  cen.position.z = 0.05;
+  g.add(cen);
+  // tiny stamen tufts
+  for (let i = 0; i < 10; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const rad = Math.random() * 0.18;
+    const stam = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05, 6, 5),
+      centerMat('#fff36a')
+    );
+    stam.position.set(Math.cos(ang) * rad, Math.sin(ang) * rad, 0.18);
+    g.add(stam);
+  }
+  return g;
+}
+
+const flowerPalettes = [
+  { p:'#ff6fb8', c:'#fff36a' },
+  { p:'#ffd3a0', c:'#ff5a86' },
+  { p:'#ffffff', c:'#ff8fc8' },
+  { p:'#c9a8ff', c:'#fff36a' },
+  { p:'#ffb347', c:'#ff3aa0' },
+  { p:'#fff36a', c:'#ff5a86' },
+  { p:'#ff9ed1', c:'#ffffff' },
+  { p:'#ff3aa0', c:'#fff36a' },
+  { p:'#7ad4ff', c:'#ffffff' }, // teal/cyan
+  { p:'#a8e87a', c:'#fff36a' }, // mint
+];
+
+const flowerTypes = [makeDaisy, makeRose, makeTulip, makeStarFlower, makePomPom, makeMagnolia];
+
+// magnolia-specific palette additions (creamy white + pink centers)
+const magnoliaPalette = { p:'#fff6e8', c:'#ff5a86' };
+
+const cloudData = [];
+const NUM_CLOUDS = 32;
+for (let i = 0; i < NUM_CLOUDS; i++) {
+  const pal = flowerPalettes[i % flowerPalettes.length];
+  const maker = flowerTypes[i % flowerTypes.length];
+  const scale = 0.7 + Math.random() * 1.0;
+  const cloud = maker(pal.p, pal.c);
+  cloud.scale.setScalar(scale);
+
+  // distribute around the scene at varying heights/distances — RESPECT the safe zone
+  const angle = (i / NUM_CLOUDS) * Math.PI * 2 + Math.random() * 0.5;
+  const radius = SAFE_INNER_RADIUS + 2.5 + Math.random() * 9;  // 11..23
+  const height = 4.5 + Math.random() * 8;                        // mostly above her head
+  cloud.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius - 2);
+  cloud.lookAt(0, height, 0);
+  cloud.rotation.z = Math.random() * Math.PI * 2;
+  cloud.userData = {
+    basePos: cloud.position.clone(),
+    spinSpeed: (Math.random() - 0.5) * 0.5,
+    bobPhase: Math.random() * Math.PI * 2,
+    bobAmp: 0.3 + Math.random() * 0.6,
+    driftPhase: Math.random() * Math.PI * 2,
+  };
+  flowerClouds.add(cloud);
+  cloudData.push(cloud);
+}
+
+// dense cluster ringing the ISLAND — close to Katelyn but NOT blocking the camera view
+const NUM_NEAR = 14;
+for (let i = 0; i < NUM_NEAR; i++) {
+  const pal = flowerPalettes[(i * 3) % flowerPalettes.length];
+  const maker = flowerTypes[(i + 2) % flowerTypes.length];
+  const cloud = maker(pal.p, pal.c);
+  cloud.scale.setScalar(0.4 + Math.random() * 0.35);
+
+  // ALWAYS above Katelyn's head OR far out at her level — clear the eye-level wedge from any angle
+  const above = Math.random() < 0.55;
+  let radius, height;
+  const angle = Math.random() * Math.PI * 2;
+  if (above) {
+    radius = 3.0 + Math.random() * 4.0;
+    height = 5.5 + Math.random() * 3.0;   // well above her head (top ~3.0)
+  } else {
+    radius = 8.5 + Math.random() * 2.5;   // far enough that they're background
+    height = 1.0 + Math.random() * 2.5;
+  }
+  cloud.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+  cloud.lookAt(0, height, 0);
+  cloud.rotation.z = Math.random() * Math.PI * 2;
+  cloud.userData = {
+    basePos: cloud.position.clone(),
+    spinSpeed: (Math.random() - 0.5) * 0.6,
+    bobPhase: Math.random() * Math.PI * 2,
+    bobAmp: 0.2 + Math.random() * 0.4,
+    driftPhase: Math.random() * Math.PI * 2,
+  };
+  flowerClouds.add(cloud);
+  cloudData.push(cloud);
+}
+
+// extra cluster near the sun
+for (let i = 0; i < 10; i++) {
+  const pal = flowerPalettes[(i + 2) % flowerPalettes.length];
+  const maker = flowerTypes[(i + 1) % flowerTypes.length];
+  const cloud = maker(pal.p, pal.c);
+  cloud.scale.setScalar(0.55 + Math.random() * 0.55);
+  const ang = -0.7 + Math.random() * 1.4;
+  const r = 13 + Math.random() * 5;
+  const yy = 4 + Math.random() * 5;
+  cloud.position.set(Math.cos(ang) * r, yy, -Math.sin(ang) * r - 2);
+  cloud.lookAt(0, yy, 0);
+  cloud.userData = {
+    basePos: cloud.position.clone(),
+    spinSpeed: (Math.random() - 0.5) * 0.7,
+    bobPhase: Math.random() * Math.PI * 2,
+    bobAmp: 0.2 + Math.random() * 0.4,
+    driftPhase: Math.random() * Math.PI * 2,
+  };
+  flowerClouds.add(cloud);
+  cloudData.push(cloud);
+}
+
+function updateFlowerClouds(t) {
+  cloudData.forEach((c) => {
+    const u = c.userData;
+    c.position.y = u.basePos.y + Math.sin(t * 0.5 + u.bobPhase) * u.bobAmp;
+    c.position.x = u.basePos.x + Math.sin(t * 0.3 + u.driftPhase) * 0.3;
+    c.rotation.z += u.spinSpeed * 0.005;
+  });
+}
+
+// =============================================================
+// FLYING PIGS — pigs with wings, looping around the scene
+// =============================================================
+const flyingPigs = new THREE.Group();
+scene.add(flyingPigs);
+
+function makeFlyingPig(coatColor) {
+  const g = new THREE.Group();
+  const pink = new THREE.MeshStandardMaterial({color: coatColor, roughness:0.7});
+  const pinkDark = new THREE.MeshStandardMaterial({color: new THREE.Color(coatColor).multiplyScalar(0.85).getStyle(), roughness:0.75});
+  const wingMat = new THREE.MeshStandardMaterial({
+    color:'#fff5fa', roughness:0.3,
+    emissive:'#ffd9ec', emissiveIntensity:0.4,
+    transparent:true, opacity:0.92, side:THREE.DoubleSide
+  });
+
+  // body — chunky ellipsoid
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 18, 14), pink);
+  body.scale.set(1.35, 0.95, 1);
+  g.add(body);
+
+  // head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 14), pink);
+  head.position.set(0.55, 0.12, 0);
+  head.scale.set(1, 0.95, 1);
+  g.add(head);
+
+  // snout
+  const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.12, 14), pinkDark);
+  snout.rotation.z = Math.PI / 2;
+  snout.position.set(0.82, 0.05, 0);
+  g.add(snout);
+  // nostrils
+  for (let s = -1; s <= 1; s += 2) {
+    const nos = new THREE.Mesh(new THREE.SphereGeometry(0.02, 6, 5),
+      new THREE.MeshStandardMaterial({color:'#5a2030'}));
+    nos.position.set(0.88, 0.05, s * 0.05);
+    g.add(nos);
+  }
+
+  // ears — triangular
+  for (let s = -1; s <= 1; s += 2) {
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.16, 5), pink);
+    ear.position.set(0.45, 0.36, s * 0.18);
+    ear.rotation.z = -0.4;
+    ear.rotation.x = s * 0.3;
+    g.add(ear);
+  }
+
+  // eyes — tiny black dots
+  for (let s = -1; s <= 1; s += 2) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 6),
+      new THREE.MeshStandardMaterial({color:'#0a0612'}));
+    eye.position.set(0.66, 0.18, s * 0.13);
+    g.add(eye);
+    // highlight
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.01, 6, 5),
+      new THREE.MeshStandardMaterial({color:'#fff'}));
+    hl.position.set(0.68, 0.20, s * 0.13);
+    g.add(hl);
+  }
+
+  // 4 little legs (just stubs)
+  for (let i = 0; i < 4; i++) {
+    const x = i < 2 ? 0.25 : -0.25;
+    const z = i % 2 === 0 ? 0.15 : -0.15;
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.18, 8), pinkDark);
+    leg.position.set(x, -0.35, z);
+    g.add(leg);
+  }
+
+  // curly tail
+  const tail = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.025, 8, 12, Math.PI * 1.6), pinkDark);
+  tail.position.set(-0.55, 0.15, 0);
+  tail.rotation.y = Math.PI / 2;
+  g.add(tail);
+
+  // WINGS — feathered, will flap
+  function makeWing(side) {
+    const wing = new THREE.Group();
+    // 3 feather layers (overlapping ellipses)
+    const sizes = [0.55, 0.45, 0.35];
+    sizes.forEach((sz, i) => {
+      const feather = new THREE.Mesh(new THREE.SphereGeometry(sz, 16, 10), wingMat);
+      feather.scale.set(1.3, 0.55, 0.15);
+      feather.position.set(-0.1 * i, 0.05 * i, 0);
+      wing.add(feather);
+    });
+    // wing pivot is at shoulder
+    wing.position.set(0, 0.35, side * 0.25);
+    wing.userData.side = side;
+    return wing;
+  }
+  const wingL = makeWing(-1);
+  const wingR = makeWing(1);
+  g.add(wingL); g.add(wingR);
+
+  g.userData.wings = [wingL, wingR];
+  return g;
+}
+
+const pigData = [];
+const pigCoats = ['#ffb6cf', '#ff9ec3', '#ffc8d8', '#ffadc8'];
+for (let i = 0; i < 5; i++) {
+  const pig = makeFlyingPig(pigCoats[i % pigCoats.length]);
+  pig.scale.setScalar(0.7 + Math.random() * 0.5);
+  pig.userData.orbitR = 7 + Math.random() * 6;
+  pig.userData.orbitH = 9 + Math.random() * 5;  // much higher in sky
+  pig.userData.orbitSpeed = (0.25 + Math.random() * 0.25) * (Math.random() < 0.5 ? 1 : -1);
+  pig.userData.orbitPhase = (i / 5) * Math.PI * 2;
+  pig.userData.bobAmp = 0.4 + Math.random() * 0.5;
+  pig.userData.bobPhase = Math.random() * Math.PI * 2;
+  flyingPigs.add(pig);
+  pigData.push(pig);
+}
+
+function updatePigs(t) {
+  pigData.forEach(pig => {
+    const u = pig.userData;
+    const angle = t * u.orbitSpeed + u.orbitPhase;
+    const x = Math.cos(angle) * u.orbitR;
+    const z = Math.sin(angle) * u.orbitR;
+    const y = u.orbitH + Math.sin(t * 1.3 + u.bobPhase) * u.bobAmp;
+    pig.position.set(x, y, z);
+    // face direction of motion
+    const heading = Math.atan2(-Math.sin(angle) * u.orbitSpeed, Math.cos(angle) * u.orbitSpeed);
+    pig.rotation.y = heading - Math.PI/2;
+    // gentle bank
+    pig.rotation.z = Math.sin(t * 1.3 + u.bobPhase) * 0.1;
+    // wing flap
+    const flap = Math.sin(t * 9 + u.bobPhase) * 0.7;
+    u.wings[0].rotation.x = -flap;
+    u.wings[1].rotation.x =  flap;
+  });
+}
+
+// =============================================================
+// SPARKLES — clustered into flowers + around moon
+// =============================================================
+const sparkleGroup = new THREE.Group();
+scene.add(sparkleGroup);
+
+function makeSparkleTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const cx = 64, cy = 64;
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 64);
+  glow.addColorStop(0, 'rgba(255,255,255,0.9)');
+  glow.addColorStop(0.3, 'rgba(255,230,255,0.4)');
+  glow.addColorStop(1, 'rgba(255,200,240,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(cx, cy, 64, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 50);
+  ctx.lineTo(cx + 6, cy - 6);
+  ctx.lineTo(cx + 50, cy);
+  ctx.lineTo(cx + 6, cy + 6);
+  ctx.lineTo(cx, cy + 50);
+  ctx.lineTo(cx - 6, cy + 6);
+  ctx.lineTo(cx - 50, cy);
+  ctx.lineTo(cx - 6, cy - 6);
+  ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 0.55;
+  // diagonal cross
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(Math.PI/4);
+  ctx.beginPath();
+  ctx.moveTo(0, -32);
+  ctx.lineTo(4, -4);
+  ctx.lineTo(32, 0);
+  ctx.lineTo(4, 4);
+  ctx.lineTo(0, 32);
+  ctx.lineTo(-4, 4);
+  ctx.lineTo(-32, 0);
+  ctx.lineTo(-4, -4);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  const hot = ctx.createRadialGradient(cx, cy, 0, cx, cy, 8);
+  hot.addColorStop(0, '#ffffff');
+  hot.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hot;
+  ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const sparkleTex = makeSparkleTexture();
+
+const sparkleData = [];
+function addSparkle(x, y, z, color, size, twinkleSpeed, twinklePhase) {
+  const mat = new THREE.SpriteMaterial({
+    map: sparkleTex, color, transparent:true,
+    blending: THREE.AdditiveBlending, depthWrite:false, fog:false
+  });
+  const s = new THREE.Sprite(mat);
+  s.position.set(x, y, z);
+  s.scale.set(size, size, 1);
+  s.userData = { baseSize: size, speed: twinkleSpeed, phase: twinklePhase };
+  sparkleGroup.add(s);
+  sparkleData.push(s);
+  return s;
+}
+
+cloudData.forEach(c => {
+  const numSparkles = 3 + Math.floor(Math.random() * 3);
+  for (let k = 0; k < numSparkles; k++) {
+    const ox = (Math.random() - 0.5) * 1.5;
+    const oy = (Math.random() - 0.5) * 1.5;
+    const oz = (Math.random() - 0.5) * 0.4;
+    const colors = ['#ffffff','#fff36a','#ff9ed1','#c9a8ff','#ffd3a0'];
+    const col = colors[Math.floor(Math.random() * colors.length)];
+    const size = 0.3 + Math.random() * 0.45;
+    const sp = addSparkle(c.position.x + ox, c.position.y + oy, c.position.z + oz,
+      col, size, 1.5 + Math.random()*2.5, Math.random()*Math.PI*2);
+    sp.userData.attachedTo = c;
+    sp.userData.offset = new THREE.Vector3(ox, oy, oz);
+  }
+});
+
+// dedicated MAGNOLIA cluster — small + far enough not to block Katelyn from any angle
+const NUM_MAGNOLIAS = 8;
+for (let i = 0; i < NUM_MAGNOLIAS; i++) {
+  const cm = makeMagnolia(magnoliaPalette.p, magnoliaPalette.c);
+  cm.scale.setScalar(0.3 + Math.random() * 0.2);
+  const angle = Math.random() * Math.PI * 2;
+  const above = Math.random() < 0.55;
+  let radius, height;
+  if (above) {
+    radius = 4.0 + Math.random() * 3.5;
+    height = 5.5 + Math.random() * 2.5;
+  } else {
+    radius = 9.0 + Math.random() * 2.5;
+    height = 1.0 + Math.random() * 2.0;
+  }
+  cm.position.set(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+  cm.lookAt(0, height, 0);
+  cm.rotation.z = Math.random() * Math.PI * 2;
+  cm.userData = {
+    basePos: cm.position.clone(),
+    spinSpeed: (Math.random() - 0.5) * 0.4,
+    bobPhase: Math.random() * Math.PI * 2,
+    bobAmp: 0.2 + Math.random() * 0.35,
+    driftPhase: Math.random() * Math.PI * 2,
+  };
+  flowerClouds.add(cm);
+  cloudData.push(cm);
+
+  for (let k = 0; k < 2; k++) {
+    const ox = (Math.random() - 0.5) * 1.0;
+    const oy = (Math.random() - 0.5) * 1.0;
+    const oz = (Math.random() - 0.5) * 0.3;
+    const colors = ['#ffffff','#fff36a','#ff9ed1'];
+    const sp = addSparkle(cm.position.x + ox, cm.position.y + oy, cm.position.z + oz,
+      colors[k % colors.length], 0.28 + Math.random() * 0.25,
+      1.5 + Math.random()*2.5, Math.random()*Math.PI*2);
+    sp.userData.attachedTo = cm;
+    sp.userData.offset = new THREE.Vector3(ox, oy, oz);
+  }
+}
+
+// =============================================================
+// BIG SPARKLY MOON
+// =============================================================
+const moonGroup = new THREE.Group();
+scene.add(moonGroup);
+{
+  const moonPos = new THREE.Vector3(-8, 11, -14);
+  moonGroup.position.copy(moonPos);
+
+  const moonMat = new THREE.MeshStandardMaterial({
+    color: '#fff4e8',
+    emissive: '#ffeed8',
+    emissiveIntensity: 0.7,
+    roughness: 0.85,
+    fog: false
+  });
+  const moon = new THREE.Mesh(new THREE.SphereGeometry(2.8, 48, 32), moonMat);
+  moonGroup.add(moon);
+
+  // halo
+  const haloCanvas = document.createElement('canvas');
+  haloCanvas.width = haloCanvas.height = 256;
+  const hctx = haloCanvas.getContext('2d');
+  const halo = hctx.createRadialGradient(128,128,0,128,128,128);
+  halo.addColorStop(0, 'rgba(255,240,220,0.75)');
+  halo.addColorStop(0.4, 'rgba(255,200,220,0.35)');
+  halo.addColorStop(1, 'rgba(255,180,220,0)');
+  hctx.fillStyle = halo;
+  hctx.fillRect(0,0,256,256);
+  const haloTex = new THREE.CanvasTexture(haloCanvas);
+  const haloSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: haloTex, transparent:true, blending: THREE.AdditiveBlending, depthWrite:false, fog:false
+  }));
+  haloSprite.scale.set(12, 12, 1);
+  moonGroup.add(haloSprite);
+
+  // craters
+  for (let i=0;i<8;i++){
+    const ang = Math.random() * Math.PI * 2;
+    const r = Math.random() * 2.0;
+    const ry = (Math.random()-0.5) * 1.8;
+    const crater = new THREE.Mesh(
+      new THREE.CircleGeometry(0.15 + Math.random()*0.25, 16),
+      new THREE.MeshBasicMaterial({color:'#e8d7c2', transparent:true, opacity:0.55, fog:false})
+    );
+    const x = Math.cos(ang) * r * 0.5;
+    const y = ry * 0.5;
+    const z = Math.sqrt(Math.max(0.01, 7.84 - x*x - y*y));
+    crater.position.set(x, y, z);
+    crater.lookAt(crater.position.clone().multiplyScalar(2));
+    moonGroup.add(crater);
+  }
+
+  // sparkles around the moon (world-space positions)
+  for (let i=0;i<28;i++){
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 3.6 + Math.random() * 4.5;
+    const x = Math.cos(ang) * dist;
+    const y = Math.sin(ang) * dist * 0.85;
+    const z = (Math.random()-0.5) * 2;
+    const colors = ['#ffffff','#fff5cc','#ffd9ec','#c9a8ff'];
+    addSparkle(moonPos.x + x, moonPos.y + y, moonPos.z + z,
+      colors[i % colors.length],
+      0.45 + Math.random() * 0.7,
+      1.0 + Math.random()*2.5, Math.random()*Math.PI*2);
+  }
+  // 3 chunky sparkles on the moon's face
+  for (let i=0;i<3;i++){
+    addSparkle(
+      moonPos.x + (Math.random()-0.5) * 3.5,
+      moonPos.y + (Math.random()-0.5) * 3.5,
+      moonPos.z + 2.9 + (Math.random()-0.5)*0.2,
+      '#ffffff',
+      0.7 + Math.random() * 0.4,
+      1.5 + Math.random()*1.8, Math.random()*Math.PI*2
+    );
+  }
+}
+
+function updateSparkles(t) {
+  sparkleData.forEach(s => {
+    const u = s.userData;
+    if (u.attachedTo) {
+      s.position.x = u.attachedTo.position.x + u.offset.x;
+      s.position.y = u.attachedTo.position.y + u.offset.y;
+      s.position.z = u.attachedTo.position.z + u.offset.z;
+    }
+    const tw = 0.5 + 0.5 * Math.sin(t * u.speed + u.phase);
+    const sc = u.baseSize * (0.5 + 0.7 * tw);
+    s.scale.set(sc, sc, 1);
+    s.material.opacity = 0.3 + 0.7 * tw;
+  });
+}
+
+// =============================================================
+// KATELYN — cutout image as a billboard sprite (glasses, locked)
+// =============================================================
+const loader = new THREE.TextureLoader();
+
+// Katelyn outfits: each entry is {key, label, file, w, h}
+const KATELYN_OUTFITS = [
+  { key:'leopard',   label:'Leopard',     file:'katelyn-leopard.png',   w:341, h:1101 },
+  { key:'bluedress', label:'Blue Dress',  file:'katelyn-bluedress.png', w:368, h:1099 },
+  { key:'mattsgirl', label:"Matt's Girl", file:'katelyn-mattsgirl.png', w:342, h:1099 },
+];
+const KATELYN_TEX = {};
+KATELYN_OUTFITS.forEach(o => {
+  const t = loader.load(o.file);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  KATELYN_TEX[o.key] = t;
+});
+
+const texMatt = loader.load('matt-2d.png');
+texMatt.colorSpace = THREE.SRGBColorSpace;
+texMatt.anisotropy = 8;
+
+// Katelyn ~3.0 units tall (≈ 5'5"). Matt is one foot taller (≈ 6'5") → 3.0 * 77/65 ≈ 3.55 units.
+const charH = 3.0;
+const mattH = 3.55;
+const matt2dAspect = 438 / 1587;
+const mattW = mattH * matt2dAspect;
+
+const pairGroup = new THREE.Group();
+pairGroup.position.set(0, 0, 0);
+islandGroup.add(pairGroup);
+
+const katelynGroup = new THREE.Group();
+katelynGroup.position.set(0, 1.1 + charH/2 - 0.05, 0);
+pairGroup.add(katelynGroup);
+
+// Plane geometry recreated per outfit-switch (to honor aspect)
+let planeKatelyn = null;
+const matKatelyn = new THREE.MeshBasicMaterial({
+  map: KATELYN_TEX[KATELYN_OUTFITS[0].key],
+  transparent:true, alphaTest:0.02, side: THREE.DoubleSide, depthWrite:false,
+  fog:false, toneMapped:false
+});
+
+function setKatelynOutfit(key) {
+  const o = KATELYN_OUTFITS.find(x => x.key === key) || KATELYN_OUTFITS[0];
+  const aspect = o.w / o.h;
+  const w = charH * aspect;
+  if (planeKatelyn) {
+    katelynGroup.remove(planeKatelyn);
+    planeKatelyn.geometry.dispose();
+  }
+  planeKatelyn = new THREE.Mesh(new THREE.PlaneGeometry(w, charH), matKatelyn);
+  katelynGroup.add(planeKatelyn);
+  matKatelyn.map = KATELYN_TEX[o.key];
+  matKatelyn.needsUpdate = true;
+}
+setKatelynOutfit(KATELYN_OUTFITS[0].key);
+
+// Matt — 2D cutout, positioned slightly behind & close to Katelyn
+const mattGroup = new THREE.Group();
+mattGroup.position.set(0.35, 1.1 + mattH/2 - 0.05, -0.08);
+mattGroup.visible = false;
+pairGroup.add(mattGroup);
+const matMatt = new THREE.MeshBasicMaterial({ map: texMatt, transparent:true, alphaTest:0.02, side: THREE.DoubleSide, depthWrite:false, fog:false, toneMapped:false });
+const planeMatt = new THREE.Mesh(new THREE.PlaneGeometry(mattW, mattH), matMatt);
+mattGroup.add(planeMatt);
+
+// Matt shadow
+{
+  const shadowCanvas = document.createElement('canvas');
+  shadowCanvas.width = shadowCanvas.height = 128;
+  const sctx = shadowCanvas.getContext('2d');
+  const grd = sctx.createRadialGradient(64,64,0,64,64,60);
+  grd.addColorStop(0,'rgba(0,0,0,0.5)');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  sctx.fillStyle = grd; sctx.fillRect(0,0,128,128);
+  const stex = new THREE.CanvasTexture(shadowCanvas);
+  const mattShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.6, 0.85),
+    new THREE.MeshBasicMaterial({ map: stex, transparent:true, depthWrite:false })
+  );
+  mattShadow.rotation.x = -Math.PI/2;
+  mattShadow.position.set(0.35, 1.08, 0.05);
+  mattShadow.visible = false;
+  mattGroup.userData.shadow = mattShadow;
+  islandGroup.add(mattShadow);
+}
+
+// ground shadow under her feet (soft elliptical patch)
+{
+  const shadowCanvas = document.createElement('canvas');
+  shadowCanvas.width = shadowCanvas.height = 128;
+  const sctx = shadowCanvas.getContext('2d');
+  const grd = sctx.createRadialGradient(64,64,0,64,64,60);
+  grd.addColorStop(0,'rgba(0,0,0,0.55)');
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  sctx.fillStyle = grd; sctx.fillRect(0,0,128,128);
+  const stex = new THREE.CanvasTexture(shadowCanvas);
+  const charShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.4, 0.7),
+    new THREE.MeshBasicMaterial({ map: stex, transparent:true, depthWrite:false })
+  );
+  charShadow.rotation.x = -Math.PI/2;
+  charShadow.position.set(0, 1.08, 0.08);
+  islandGroup.add(charShadow);
+}
+
+// DOGS — keep as 3D
+function makePomeranian() {
+  const g = new THREE.Group();
+  const fluff = new THREE.MeshStandardMaterial({color:'#1a1a1a', roughness:1});
+  const skin = new THREE.MeshStandardMaterial({color:'#0a0a0a', roughness:1});
+
+  const body1 = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), fluff);
+  body1.position.y = 0.18; body1.castShadow = true; g.add(body1);
+  const body2 = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), fluff);
+  body2.position.set(0.13, 0.2, 0); g.add(body2);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), fluff);
+  head.position.set(0.26, 0.28, 0); head.castShadow = true; g.add(head);
+  const muz = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), skin);
+  muz.position.set(0.36, 0.24, 0); g.add(muz);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), new THREE.MeshStandardMaterial({color:'#000'}));
+  nose.position.set(0.40, 0.26, 0); g.add(nose);
+  const eyeMat = new THREE.MeshStandardMaterial({color:'#1a0a05', roughness:0.3});
+  const eL = new THREE.Mesh(new THREE.SphereGeometry(0.018,8,6), eyeMat);
+  eL.position.set(0.32, 0.32, 0.07); g.add(eL);
+  const eR = eL.clone(); eR.position.z = -0.07; g.add(eR);
+  const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.1, 4), fluff);
+  ear.position.set(0.22, 0.42, 0.08); ear.rotation.z = -0.3; g.add(ear);
+  const ear2 = ear.clone(); ear2.position.z = -0.08; g.add(ear2);
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10), fluff);
+  tail.position.set(-0.17, 0.32, 0); g.add(tail);
+
+  function leg(x, z) {
+    const L = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.14, 8), fluff);
+    L.position.set(x, 0.07, z); return L;
+  }
+  const legs = [leg(0.10,0.10), leg(0.10,-0.10), leg(-0.10,0.10), leg(-0.10,-0.10)];
+  legs.forEach(l => g.add(l));
+  g.userData.legs = legs;
+  g.userData.head = head;
+  return g;
+}
+
+function makePug() {
+  const g = new THREE.Group();
+  const fawn = new THREE.MeshStandardMaterial({color:'#d6a76a', roughness:0.85});
+  const dark = new THREE.MeshStandardMaterial({color:'#3a2418', roughness:0.9});
+
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.20, 18, 14), fawn);
+  body.scale.set(1.3, 1.0, 1.0); body.position.y = 0.18; body.castShadow = true; g.add(body);
+  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 10), fawn);
+  chest.position.set(0.2, 0.16, 0); g.add(chest);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 14), fawn);
+  head.position.set(0.34, 0.26, 0); head.castShadow = true; g.add(head);
+
+  const mask = new THREE.Mesh(new THREE.SphereGeometry(0.105, 14, 10), dark);
+  mask.scale.set(1.1, 0.85, 1.0); mask.position.set(0.42, 0.22, 0); g.add(mask);
+  const muz = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), dark);
+  muz.position.set(0.48, 0.22, 0); g.add(muz);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 8), new THREE.MeshStandardMaterial({color:'#000'}));
+  nose.position.set(0.51, 0.235, 0); g.add(nose);
+  const eyeMat = new THREE.MeshStandardMaterial({color:'#1a0a05'});
+  const eyeWhite = new THREE.MeshStandardMaterial({color:'#ffffff'});
+  function pugEye(z){
+    const w = new THREE.Mesh(new THREE.SphereGeometry(0.034, 10, 8), eyeWhite);
+    w.position.set(0.39, 0.3, z); g.add(w);
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 8), eyeMat);
+    e.position.set(0.405, 0.3, z); g.add(e);
+  }
+  pugEye(0.08); pugEye(-0.08);
+
+  const earL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), dark);
+  earL.scale.set(0.6, 1.4, 0.4); earL.position.set(0.3, 0.36, 0.12); earL.rotation.z = 0.5; g.add(earL);
+  const earR = earL.clone(); earR.position.z = -0.12; g.add(earR);
+
+  const tail = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.022, 8, 12, Math.PI*1.5), fawn);
+  tail.position.set(-0.2, 0.28, 0); tail.rotation.y = Math.PI/2; g.add(tail);
+
+  function leg(x, z) {
+    const L = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.16, 8), fawn);
+    L.position.set(x, 0.08, z); return L;
+  }
+  const legs = [leg(0.16,0.10), leg(0.16,-0.10), leg(-0.14,0.10), leg(-0.14,-0.10)];
+  legs.forEach(l => g.add(l));
+  g.userData.legs = legs;
+  g.userData.head = head;
+  return g;
+}
+
+const pom = makePomeranian();
+const pug = makePug();
+islandGroup.add(pom);
+islandGroup.add(pug);
+
+// ground shadow under island
+{
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(3.2, 32),
+    new THREE.MeshBasicMaterial({color:'#1a0d2e', transparent:true, opacity:0.25, fog:false})
+  );
+  shadow.rotation.x = -Math.PI/2;
+  shadow.position.y = -3.2;
+  scene.add(shadow);
+}
+
+// fireflies
+const fireflies = new THREE.Group();
+scene.add(fireflies);
+{
+  const ffMat = new THREE.MeshBasicMaterial({color:'#fff4a8', transparent:true, opacity:0.9, fog:false});
+  for (let i=0;i<40;i++){
+    const f = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 5), ffMat);
+    f.position.set((Math.random()-0.5)*8, Math.random()*4 + 0.5, (Math.random()-0.5)*8);
+    f.userData.phase = Math.random()*Math.PI*2;
+    f.userData.speed = 0.5 + Math.random()*0.8;
+    f.userData.base = f.position.clone();
+    fireflies.add(f);
+  }
+}
+
+// ANIMATION
+const clock = new THREE.Clock();
+
+function ease(t){ return 0.5 - 0.5*Math.cos(Math.PI*t); }
+
+function updateKatelyn(t) {
+  // billboard the whole pair toward camera (Y axis only)
+  const camPos = new THREE.Vector3();
+  camera.getWorldPosition(camPos);
+  const localCam = islandGroup.worldToLocal(camPos.clone());
+  pairGroup.rotation.y = Math.atan2(localCam.x, localCam.z);
+
+  // gentle bob
+  const bob = Math.sin(t*1.2)*0.06;
+  katelynGroup.position.y = (1.1 + charH/2 - 0.05) + bob;
+  mattGroup.position.y    = (1.1 + mattH/2 - 0.05) + bob * 0.85;
+  katelynGroup.rotation.z = Math.sin(t*0.9)*0.015;
+  mattGroup.rotation.z    = Math.sin(t*0.7 + 0.5)*0.012;
+}
+
+function updateIsland(t) {
+  islandGroup.position.y = Math.sin(t*0.6)*0.18;
+  islandGroup.rotation.y = Math.sin(t*0.2)*0.05;
+}
+
+function updateDog(dog, t, params) {
+  const { radius, speed, phase, yBob, scale } = params;
+  const angle = t * speed + phase;
+  const x = Math.cos(angle) * radius;
+  const z = Math.sin(angle) * radius;
+  dog.position.set(x, 1.15 + Math.abs(Math.sin(t*speed*4 + phase))*yBob, z);
+  const tangent = Math.atan2(Math.cos(angle) * speed, -Math.sin(angle) * speed);
+  dog.rotation.y = tangent + Math.PI/2;
+  dog.scale.setScalar(scale);
+  const legs = dog.userData.legs;
+  if (legs) {
+    legs.forEach((L, i) => {
+      L.rotation.x = Math.sin(t*speed*8 + phase + i*Math.PI/2) * 0.6;
+    });
+  }
+  if (dog.userData.head) {
+    if (dog.userData.head.userData.baseY === undefined) {
+      dog.userData.head.userData.baseY = dog.userData.head.position.y;
+    }
+    dog.userData.head.position.y = dog.userData.head.userData.baseY + Math.sin(t*speed*8 + phase)*0.02;
+  }
+}
+
+function updateFireflies(t) {
+  fireflies.children.forEach(f => {
+    const b = f.userData.base;
+    f.position.x = b.x + Math.sin(t * f.userData.speed + f.userData.phase) * 0.6;
+    f.position.y = b.y + Math.cos(t * f.userData.speed * 0.7 + f.userData.phase)*0.5;
+    f.position.z = b.z + Math.sin(t * f.userData.speed * 0.5 + f.userData.phase*1.3)*0.6;
+    f.material.opacity = 0.4 + 0.5 * (0.5 + 0.5*Math.sin(t*3 + f.userData.phase));
+  });
+}
+
+// =============================================================
+// TWEAKS — UI panel + host protocol wiring
+// =============================================================
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "outfit": "leopard",
+  "matt": false,
+  "dogs": true,
+  "pigs": true,
+  "flowers": true,
+  "sparkles": true,
+  "moon": true,
+  "fireflies": true,
+  "orbit": false,
+  "orbitSpeed": 34,
+  "bob": true
+}/*EDITMODE-END*/;
+
+const panel = document.getElementById('tweaks-panel');
+
+function setTweakAndPost(key, value) {
+  TWEAKS[key] = value;
+  try { window.parent.postMessage({type:'__edit_mode_set_keys', edits: {[key]: value}}, '*'); } catch(_) {}
+  applyTweak(key);
+}
+
+function applyTweak(key) {
+  switch (key) {
+    case 'outfit':
+      setKatelynOutfit(TWEAKS.outfit);
+      document.querySelectorAll('#tweaks-panel .tw-outfit').forEach(b => {
+        b.classList.toggle('active', b.dataset.key === TWEAKS.outfit);
+      });
+      break;
+    case 'matt':
+      mattGroup.visible = TWEAKS.matt;
+      if (mattGroup.userData.shadow) mattGroup.userData.shadow.visible = TWEAKS.matt;
+      // Matt stands close and slightly behind; Katelyn stays centered (he overlaps from behind)
+      katelynGroup.position.x = TWEAKS.matt ? -0.15 : 0;
+      katelynGroup.position.z = TWEAKS.matt ? 0.05 : 0;
+      mattGroup.position.x = 0.30;
+      if (mattGroup.userData.shadow) mattGroup.userData.shadow.position.x = TWEAKS.matt ? 0.30 : 0;
+      break;
+    case 'dogs':    pom.visible = pug.visible = TWEAKS.dogs; break;
+    case 'pigs':    flyingPigs.visible = TWEAKS.pigs; break;
+    case 'flowers': flowerClouds.visible = TWEAKS.flowers; break;
+    case 'sparkles': sparkleGroup.visible = TWEAKS.sparkles; break;
+    case 'moon':    moonGroup.visible = TWEAKS.moon; break;
+    case 'fireflies': fireflies.visible = TWEAKS.fireflies; break;
+  }
+}
+
+// initial sync of DOM controls to TWEAKS
+function syncDomFromState() {
+  document.getElementById('tw-matt').checked = TWEAKS.matt;
+  document.getElementById('tw-dogs').checked = TWEAKS.dogs;
+  document.getElementById('tw-pigs').checked = TWEAKS.pigs;
+  document.getElementById('tw-flowers').checked = TWEAKS.flowers;
+  document.getElementById('tw-sparkles').checked = TWEAKS.sparkles;
+  document.getElementById('tw-moon').checked = TWEAKS.moon;
+  document.getElementById('tw-fireflies').checked = TWEAKS.fireflies;
+  document.getElementById('tw-orbit').checked = TWEAKS.orbit;
+  document.getElementById('tw-orbit-speed').value = TWEAKS.orbitSpeed;
+  document.getElementById('tw-orbit-speed-v').textContent = TWEAKS.orbitSpeed;
+  document.getElementById('tw-bob').checked = TWEAKS.bob;
+  document.querySelectorAll('#tweaks-panel .tw-outfit').forEach(b => {
+    b.classList.toggle('active', b.dataset.key === TWEAKS.outfit);
+  });
+}
+syncDomFromState();
+// apply all current tweak states once
+['outfit','matt','dogs','pigs','flowers','sparkles','moon','fireflies'].forEach(applyTweak);
+
+// outfit buttons
+document.querySelectorAll('#tweaks-panel .tw-outfit').forEach(btn => {
+  btn.addEventListener('click', () => setTweakAndPost('outfit', btn.dataset.key));
+});
+
+// wire control change events
+function bindToggle(id, key) {
+  document.getElementById(id).addEventListener('change', e => setTweakAndPost(key, e.target.checked));
+}
+bindToggle('tw-matt', 'matt');
+bindToggle('tw-dogs', 'dogs');
+bindToggle('tw-pigs', 'pigs');
+bindToggle('tw-flowers', 'flowers');
+bindToggle('tw-sparkles', 'sparkles');
+bindToggle('tw-moon', 'moon');
+bindToggle('tw-fireflies', 'fireflies');
+bindToggle('tw-orbit', 'orbit');
+bindToggle('tw-bob', 'bob');
+document.getElementById('tw-orbit-speed').addEventListener('input', e => {
+  const v = parseInt(e.target.value, 10);
+  document.getElementById('tw-orbit-speed-v').textContent = v;
+  setTweakAndPost('orbitSpeed', v);
+});
+
+// close button
+document.getElementById('tw-close-btn').addEventListener('click', () => {
+  panel.classList.remove('show');
+  document.body.classList.remove('tweaks-open');
+  try { window.parent.postMessage({type:'__edit_mode_dismissed'}, '*'); } catch(_) {}
+});
+
+// open button (in-page, bottom right)
+document.getElementById('tw-open-btn').addEventListener('click', () => {
+  panel.classList.add('show');
+  document.body.classList.add('tweaks-open');
+});
+
+// host protocol: register listener BEFORE announcing
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || !d.type) return;
+  if (d.type === '__activate_edit_mode') {
+    panel.classList.add('show');
+    document.body.classList.add('tweaks-open');
+  } else if (d.type === '__deactivate_edit_mode') {
+    panel.classList.remove('show');
+    document.body.classList.remove('tweaks-open');
+  }
+});
+try { window.parent.postMessage({type:'__edit_mode_available'}, '*'); } catch(_) {}
+
+// =============================================================
+// CAMERA AUTO-ORBIT (driven by tweak)
+// =============================================================
+let orbitAngle = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+const orbitRadius = () => {
+  const dx = camera.position.x - controls.target.x;
+  const dz = camera.position.z - controls.target.z;
+  return Math.sqrt(dx*dx + dz*dz);
+};
+let lastT = 0;
+function maybeAutoOrbit(t) {
+  const dt = Math.min(0.05, t - lastT);
+  lastT = t;
+  if (TWEAKS.orbit) {
+    const speedRad = (TWEAKS.orbitSpeed / 100) * 0.35; // rad/sec at max ~0.35
+    orbitAngle += speedRad * dt;
+    const r = orbitRadius();
+    camera.position.x = controls.target.x + Math.sin(orbitAngle) * r;
+    camera.position.z = controls.target.z + Math.cos(orbitAngle) * r;
+    camera.lookAt(controls.target);
+  } else {
+    // sync orbit angle from user-controlled camera so toggling on doesn't jump
+    orbitAngle = Math.atan2(camera.position.x - controls.target.x, camera.position.z - controls.target.z);
+  }
+}
+
+function tick() {
+  const t = clock.getElapsedTime();
+  if (TWEAKS.bob) updateIsland(t);
+  else { islandGroup.position.y = 0; islandGroup.rotation.y = 0; }
+  updateKatelyn(t);
+  if (TWEAKS.flowers) updateFlowerClouds(t);
+  if (TWEAKS.pigs) updatePigs(t);
+  if (TWEAKS.sparkles) updateSparkles(t);
+  if (TWEAKS.dogs) {
+    updateDog(pom, t, { radius: 1.7, speed: 1.2, phase: 0,        yBob: 0.06, scale: 0.85 });
+    updateDog(pug, t, { radius: 2.0, speed: -0.9, phase: Math.PI, yBob: 0.05, scale: 0.95 });
+  }
+  if (TWEAKS.fireflies) updateFireflies(t);
+
+  maybeAutoOrbit(t);
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+
+// Expose key objects for debugging/inspection
+window.__scene = { scene, camera, controls, pairGroup, katelynGroup, mattGroup, planeKatelyn, planeMatt, TWEAKS, islandGroup };
+window.__resetCamera = () => {
+  camera.position.set(5.6, 3.6, 9.2);
+  controls.target.set(0, 1.6, 0);
+  controls.update();
+};
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
